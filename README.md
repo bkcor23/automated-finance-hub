@@ -1,113 +1,192 @@
 
-# Welcome to your Lovable project - Automated Finance Hub
+# Automated Finance Hub
 
-## Project info
+Plataforma para la gestión unificada de finanzas personales a través de conexiones API, análisis de transacciones y automatizaciones.
 
-**URL**: https://lovable.dev/projects/2bd6e203-6f35-45b2-8a3e-bedeae794da1
+## Características principales
 
-## GitHub Pages Deployment Instructions
+- 🔐 **Autenticación completa** con registro, inicio de sesión y protección de rutas
+- 💳 **Gestión de conexiones API** para servicios financieros (Stripe, PayPal, etc.)
+- 📊 **Historial de transacciones** unificado con filtros avanzados
+- ⚡ **Automatizaciones** para tareas financieras programadas o basadas en eventos
+- 🔒 **Configuración de seguridad** con logs de actividad y gestión de sesiones
+- 🎨 **Tema claro/oscuro** y otras preferencias de usuario
+- 📱 **Diseño responsive** adaptado a todo tipo de dispositivos
 
-Since we can't directly modify package.json, follow these manual steps to deploy to GitHub Pages:
+## Stack tecnológico
 
-1. Clone the repository to your local machine
-2. Build the project: `npm run build`
-3. Create a new branch called `gh-pages`
-4. Copy the contents of the `dist` folder to the root of the `gh-pages` branch
-5. Push the `gh-pages` branch to GitHub
-6. In your GitHub repository settings, enable GitHub Pages and select the `gh-pages` branch
+- **Frontend**: React, TypeScript, TailwindCSS, shadcn/ui
+- **Backend**: Supabase (Auth, Database, Storage)
+- **Estado**: TanStack Query (React Query)
+- **Formularios**: React Hook Form + Zod
+- **Despliegue**: GitHub Pages
 
-Alternatively, you can use a GitHub Action workflow for automatic deployment.
-Create a file `.github/workflows/deploy.yml` in your repository with the following content:
+## Estructura del proyecto
 
-```yaml
-name: Deploy to GitHub Pages
+```
+src/
+├── components/     # Componentes reutilizables
+├── contexts/       # Contextos de React (Auth, etc.)
+├── hooks/          # Custom hooks (API, formularios, etc.)
+├── integrations/   # Integración con Supabase
+├── lib/            # Utilidades y helpers
+├── pages/          # Componentes de página
+└── types/          # Definiciones de tipos TypeScript
 
-on:
-  push:
-    branches: [ main ]
-
-jobs:
-  build-and-deploy:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout 🛎️
-        uses: actions/checkout@v3
-        
-      - name: Install and Build 🔧
-        run: |
-          npm ci
-          npm run build
-          
-      - name: Deploy 🚀
-        uses: JamesIves/github-pages-deploy-action@v4
-        with:
-          folder: dist
+supabase/
+├── functions/      # Edge functions
 ```
 
-## How can I edit this code?
+## Configuración y ejecución
 
-There are several ways of editing your application.
+### Requisitos previos
 
-**Use Lovable**
+- Node.js (v18+)
+- npm o bun
+- Cuenta en Supabase
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/2bd6e203-6f35-45b2-8a3e-bedeae794da1) and start prompting.
+### Instalación local
 
-Changes made via Lovable will be committed automatically to this repo.
+1. Clonar el repositorio:
+   ```bash
+   git clone <URL_DEL_REPOSITORIO>
+   cd automated-finance-hub
+   ```
 
-**Use your preferred IDE**
+2. Instalar dependencias:
+   ```bash
+   npm install
+   # o
+   bun install
+   ```
 
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
+3. Configurar Supabase:
+   - Crear proyecto en Supabase
+   - Ejecutar el script SQL incluido en el directorio `sql/`
+   - Actualizar las variables de Supabase en `src/integrations/supabase/client.ts`
 
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
+4. Iniciar servidor de desarrollo:
+   ```bash
+   npm run dev
+   # o
+   bun dev
+   ```
 
-Follow these steps:
+## Despliegue en GitHub Pages
 
-```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
+### Opción 1: Manual
 
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
+1. Construir el proyecto:
+   ```bash
+   npm run build
+   ```
 
-# Step 3: Install the necessary dependencies.
-npm i
+2. Crear rama `gh-pages`:
+   ```bash
+   git checkout -b gh-pages
+   ```
 
-# Step 4: Start the development server with auto-reloading and an instant preview.
-npm run dev
+3. Copiar contenido de la carpeta `dist` a la raíz:
+   ```bash
+   cp -R dist/* .
+   ```
+
+4. Confirmar y subir cambios:
+   ```bash
+   git add .
+   git commit -m "Deploy to GitHub Pages"
+   git push origin gh-pages
+   ```
+
+5. Configurar la rama `gh-pages` como fuente en la configuración del repositorio de GitHub
+
+### Opción 2: GitHub Actions
+
+1. Crear archivo `.github/workflows/deploy.yml` con:
+   ```yaml
+   name: Deploy to GitHub Pages
+
+   on:
+     push:
+       branches: [ main ]
+
+   jobs:
+     build-and-deploy:
+       runs-on: ubuntu-latest
+       steps:
+         - name: Checkout 🛎️
+           uses: actions/checkout@v3
+           
+         - name: Install and Build 🔧
+           run: |
+             npm ci
+             npm run build
+             
+         - name: Deploy 🚀
+           uses: JamesIves/github-pages-deploy-action@v4
+           with:
+             folder: dist
+   ```
+
+2. Subir el archivo al repositorio para activar el workflow.
+
+## Estructura de la base de datos
+
+### Tablas
+
+- **user_profiles**: Información de usuario
+- **connections**: Conexiones API a servicios financieros
+- **transactions**: Transacciones financieras
+- **automations**: Reglas y automatizaciones programadas
+- **settings**: Preferencias de usuario
+- **security_logs**: Registro de eventos de seguridad
+
+### Diagrama ER
+
+```
+user_profiles 1---* connections
+user_profiles 1---* transactions
+user_profiles 1---* automations
+user_profiles 1---1 settings
+user_profiles 1---* security_logs
+connections 1---* transactions
 ```
 
-**Edit a file directly in GitHub**
+## Migración a backend propio
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+Para migrar de Supabase a un backend propio:
 
-**Use GitHub Codespaces**
+1. **Base de datos**: 
+   - Exporte el esquema de Supabase
+   - Importe en su base de datos relacional preferida (PostgreSQL recomendado)
 
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
+2. **API**:
+   - Implemente una API REST o GraphQL (Node.js/Express, NestJS, etc.)
+   - Sustituya las llamadas a Supabase por las de su API
+   - Mantenga los mismos contratos de tipos en TypeScript
 
-## What technologies are used for this project?
+3. **Autenticación**:
+   - Implemente JWT u OAuth2 para reemplazar el sistema de autenticación de Supabase
+   - Actualice el contexto de autenticación para usar el nuevo sistema
 
-This project is built with:
+## Mejores prácticas implementadas
 
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
+- Componentes modulares con responsabilidades únicas
+- Gestión de estado con React Query para mejor rendimiento y caché
+- Validación de formularios con Zod
+- Gestión avanzada de errores con toasts informativos
+- Rutas protegidas con redirección automática
+- RLS (Row Level Security) en Supabase para protección de datos
+- Código mantenible con tipado estricto
 
-## How can I deploy this project?
+## Colaboración
 
-Simply open [Lovable](https://lovable.dev/projects/2bd6e203-6f35-45b2-8a3e-bedeae794da1) and click on Share -> Publish.
+1. Haga un fork del repositorio
+2. Cree una rama para su feature (`git checkout -b feature/amazing-feature`)
+3. Haga commit de sus cambios (`git commit -m 'Add amazing feature'`)
+4. Haga push a la rama (`git push origin feature/amazing-feature`)
+5. Abra un Pull Request
 
-## Can I connect a custom domain to my Lovable project?
+## Licencia
 
-Yes, you can!
-
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
-
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/tips-tricks/custom-domain#step-by-step-guide)
+Distribuido bajo la licencia MIT. Vea `LICENSE` para más información.

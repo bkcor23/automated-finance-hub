@@ -9,13 +9,262 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
-      [_ in never]: never
+      automations: {
+        Row: {
+          action: Json
+          created_at: string
+          description: string | null
+          executions: number | null
+          id: string
+          last_execution: string | null
+          name: string
+          next_execution: string | null
+          status: string
+          trigger: Json
+          type: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          action: Json
+          created_at?: string
+          description?: string | null
+          executions?: number | null
+          id?: string
+          last_execution?: string | null
+          name: string
+          next_execution?: string | null
+          status: string
+          trigger: Json
+          type: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          action?: Json
+          created_at?: string
+          description?: string | null
+          executions?: number | null
+          id?: string
+          last_execution?: string | null
+          name?: string
+          next_execution?: string | null
+          status?: string
+          trigger?: Json
+          type?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      connections: {
+        Row: {
+          api_key: string | null
+          created_at: string
+          error_message: string | null
+          id: string
+          last_sync: string | null
+          logo: string | null
+          name: string
+          provider: string
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          api_key?: string | null
+          created_at?: string
+          error_message?: string | null
+          id?: string
+          last_sync?: string | null
+          logo?: string | null
+          name: string
+          provider: string
+          status: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          api_key?: string | null
+          created_at?: string
+          error_message?: string | null
+          id?: string
+          last_sync?: string | null
+          logo?: string | null
+          name?: string
+          provider?: string
+          status?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      security_logs: {
+        Row: {
+          created_at: string
+          description: string
+          event_type: string
+          id: string
+          ip_address: string | null
+          user_agent: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          description: string
+          event_type: string
+          id?: string
+          ip_address?: string | null
+          user_agent?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          description?: string
+          event_type?: string
+          id?: string
+          ip_address?: string | null
+          user_agent?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      settings: {
+        Row: {
+          created_at: string
+          dashboard_widgets: Json | null
+          email_notifications: boolean | null
+          id: string
+          language: string | null
+          notifications: boolean | null
+          theme: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          dashboard_widgets?: Json | null
+          email_notifications?: boolean | null
+          id?: string
+          language?: string | null
+          notifications?: boolean | null
+          theme?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          dashboard_widgets?: Json | null
+          email_notifications?: boolean | null
+          id?: string
+          language?: string | null
+          notifications?: boolean | null
+          theme?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      transactions: {
+        Row: {
+          amount: number
+          connection_id: string | null
+          created_at: string
+          currency: string
+          date: string
+          description: string
+          id: string
+          metadata: Json | null
+          source: string | null
+          source_icon: string | null
+          status: string
+          type: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          amount: number
+          connection_id?: string | null
+          created_at?: string
+          currency: string
+          date: string
+          description: string
+          id?: string
+          metadata?: Json | null
+          source?: string | null
+          source_icon?: string | null
+          status: string
+          type: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          amount?: number
+          connection_id?: string | null
+          created_at?: string
+          currency?: string
+          date?: string
+          description?: string
+          id?: string
+          metadata?: Json | null
+          source?: string | null
+          source_icon?: string | null
+          status?: string
+          type?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "transactions_connection_id_fkey"
+            columns: ["connection_id"]
+            isOneToOne: false
+            referencedRelation: "connections"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      user_profiles: {
+        Row: {
+          avatar_url: string | null
+          created_at: string
+          email: string
+          full_name: string | null
+          id: string
+          updated_at: string
+        }
+        Insert: {
+          avatar_url?: string | null
+          created_at?: string
+          email: string
+          full_name?: string | null
+          id: string
+          updated_at?: string
+        }
+        Update: {
+          avatar_url?: string | null
+          created_at?: string
+          email?: string
+          full_name?: string | null
+          id?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      log_security_event: {
+        Args: {
+          event_type: string
+          description: string
+          ip_address?: string
+          user_agent?: string
+        }
+        Returns: string
+      }
     }
     Enums: {
       [_ in never]: never
