@@ -13,12 +13,19 @@ import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
 
+// Determine the basename for GitHub Pages deployment
+const getBasename = () => {
+  // In development, use "/"
+  // In production with GitHub Pages, use "/repository-name"
+  return import.meta.env.MODE === 'production' ? '/automated-finance-hub' : '/';
+};
+
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
       <Toaster />
       <Sonner />
-      <BrowserRouter>
+      <BrowserRouter basename={getBasename()}>
         <Routes>
           <Route
             path="/"

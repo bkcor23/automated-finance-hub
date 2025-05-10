@@ -1,8 +1,48 @@
-# Welcome to your Lovable project
+
+# Welcome to your Lovable project - Automated Finance Hub
 
 ## Project info
 
 **URL**: https://lovable.dev/projects/2bd6e203-6f35-45b2-8a3e-bedeae794da1
+
+## GitHub Pages Deployment Instructions
+
+Since we can't directly modify package.json, follow these manual steps to deploy to GitHub Pages:
+
+1. Clone the repository to your local machine
+2. Build the project: `npm run build`
+3. Create a new branch called `gh-pages`
+4. Copy the contents of the `dist` folder to the root of the `gh-pages` branch
+5. Push the `gh-pages` branch to GitHub
+6. In your GitHub repository settings, enable GitHub Pages and select the `gh-pages` branch
+
+Alternatively, you can use a GitHub Action workflow for automatic deployment.
+Create a file `.github/workflows/deploy.yml` in your repository with the following content:
+
+```yaml
+name: Deploy to GitHub Pages
+
+on:
+  push:
+    branches: [ main ]
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout 🛎️
+        uses: actions/checkout@v3
+        
+      - name: Install and Build 🔧
+        run: |
+          npm ci
+          npm run build
+          
+      - name: Deploy 🚀
+        uses: JamesIves/github-pages-deploy-action@v4
+        with:
+          folder: dist
+```
 
 ## How can I edit this code?
 
