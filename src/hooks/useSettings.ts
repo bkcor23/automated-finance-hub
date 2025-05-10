@@ -29,7 +29,8 @@ export const useSettings = () => {
       language: (data.language as 'es' | 'en') || 'es',
       notifications: !!data.notifications,
       email_notifications: !!data.email_notifications,
-      dashboard_widgets: data.dashboard_widgets || []
+      // Ensure dashboard_widgets is always an array
+      dashboard_widgets: Array.isArray(data.dashboard_widgets) ? data.dashboard_widgets : []
     } as UserSettings;
   };
 
@@ -62,7 +63,8 @@ export const useSettings = () => {
         language: (data.language as 'es' | 'en') || 'es',
         notifications: !!data.notifications,
         email_notifications: !!data.email_notifications,
-        dashboard_widgets: data.dashboard_widgets || []
+        // Ensure dashboard_widgets is always an array
+        dashboard_widgets: Array.isArray(data.dashboard_widgets) ? data.dashboard_widgets : []
       } as UserSettings;
     },
     onSuccess: (data) => {

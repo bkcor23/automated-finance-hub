@@ -59,7 +59,10 @@ export const AuthProvider = ({ children }: ChildrenProps) => {
         language: (settingsData?.language as 'es' | 'en') || 'es',
         notifications: !!settingsData?.notifications,
         email_notifications: !!settingsData?.email_notifications,
-        dashboard_widgets: settingsData?.dashboard_widgets || []
+        // Ensure dashboard_widgets is always an array
+        dashboard_widgets: Array.isArray(settingsData?.dashboard_widgets) 
+          ? settingsData?.dashboard_widgets 
+          : []
       };
 
       // Registrar login exitoso
