@@ -2,7 +2,7 @@
 import { Link, useLocation } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { cn } from '@/lib/utils';
-import { useMediaQuery } from '@/hooks/use-mobile';
+import { useIsMobile } from '@/hooks/use-mobile';
 import {
   LayoutDashboard,
   Link2,
@@ -38,7 +38,7 @@ interface SidebarProps {
 
 export default function Sidebar({ isCollapsed }: SidebarProps) {
   const { pathname } = useLocation();
-  const isSmallScreen = useMediaQuery('(max-width: 768px)');
+  const isMobile = useIsMobile();
   const { authState, logout } = useAuth();
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
   

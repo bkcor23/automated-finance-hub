@@ -17,7 +17,12 @@ export const useConnections = (userId?: string) => {
       .order('created_at', { ascending: false });
 
     if (error) throw error;
-    return data || [];
+    
+    // Ensure status is correctly typed
+    return (data || []).map(conn => ({
+      ...conn,
+      status: (conn.status as 'active' | 'inactive' | 'error')
+    })) as Connection[];
   };
 
   // Función para obtener una conexión específica
@@ -29,7 +34,12 @@ export const useConnections = (userId?: string) => {
       .single();
 
     if (error) throw error;
-    return data;
+    
+    // Ensure status is correctly typed
+    return {
+      ...data,
+      status: (data.status as 'active' | 'inactive' | 'error')
+    } as Connection;
   };
 
   // Consulta para cargar conexiones
@@ -53,7 +63,12 @@ export const useConnections = (userId?: string) => {
         .single();
 
       if (error) throw error;
-      return data;
+      
+      // Ensure status is correctly typed
+      return {
+        ...data,
+        status: (data.status as 'active' | 'inactive' | 'error')
+      } as Connection;
     },
     onSuccess: () => {
       toast.success('Conexión creada exitosamente');

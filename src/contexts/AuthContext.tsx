@@ -44,13 +44,19 @@ export const AuthProvider = ({ children }: ChildrenProps) => {
       if (profileError) throw profileError;
 
       // Cargar configuración
-      const { data: settings, error: settingsError } = await supabase
+      const { data: settingsData, error: settingsError } = await supabase
         .from('settings')
         .select('*')
         .eq('user_id', user.id)
         .single();
 
       if (settingsError) throw settingsError;
+      
+      // Ensure the theme is properly typed for UserSettings
+      const settings: UserSettings = {
+        ...settingsData,
+        theme: (settingsData?.theme as 'light' | 'dark') || 'light'
+      };
 
       // Registrar login exitoso
       await supabase.functions.invoke('log-security-event', {

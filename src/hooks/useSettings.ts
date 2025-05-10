@@ -21,7 +21,12 @@ export const useSettings = () => {
       .single();
 
     if (error) throw error;
-    return data;
+    
+    // Ensure the theme is properly typed
+    return {
+      ...data,
+      theme: (data.theme as 'light' | 'dark') || 'light'
+    } as UserSettings;
   };
 
   // Consulta para cargar configuraciones
@@ -45,7 +50,12 @@ export const useSettings = () => {
         .single();
 
       if (error) throw error;
-      return data;
+      
+      // Ensure the returned data is correctly typed
+      return {
+        ...data,
+        theme: (data.theme as 'light' | 'dark') || 'light'
+      } as UserSettings;
     },
     onSuccess: (data) => {
       toast.success('Configuración actualizada exitosamente');

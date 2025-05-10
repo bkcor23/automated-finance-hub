@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { Outlet, Navigate, useLocation } from 'react-router-dom';
-import { useMediaQuery } from '@/hooks/use-mobile';
+import { useIsMobile } from '@/hooks/use-mobile';
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from '@/components/ui/resizable';
 import { cn } from '@/lib/utils';
 import Header from './Header';
@@ -14,7 +14,7 @@ const MainLayout = () => {
   const { user, isLoading } = authState;
 
   const [isSidebarCollapsed, setSidebarCollapsed] = useState(false);
-  const isMobile = useMediaQuery('(max-width: 768px)');
+  const isMobile = useIsMobile();
 
   const toggleSidebar = () => {
     setSidebarCollapsed(!isSidebarCollapsed);

@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
@@ -31,7 +30,13 @@ export const useAutomations = (userId?: string) => {
     const { data, error } = await query;
 
     if (error) throw error;
-    return data || [];
+    
+    // Ensure the types are correctly cast
+    return (data || []).map(auto => ({
+      ...auto,
+      type: (auto.type as 'schedule' | 'condition' | 'webhook'),
+      status: (auto.status as 'active' | 'paused' | 'draft')
+    })) as Automation[];
   };
 
   // Función para obtener una automatización específica
@@ -43,7 +48,13 @@ export const useAutomations = (userId?: string) => {
       .single();
 
     if (error) throw error;
-    return data;
+    
+    // Ensure the types are correctly cast
+    return {
+      ...data,
+      type: (data.type as 'schedule' | 'condition' | 'webhook'),
+      status: (data.status as 'active' | 'paused' | 'draft')
+    } as Automation;
   };
 
   // Consulta para cargar automatizaciones
