@@ -1,10 +1,9 @@
-
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 import { 
   LayoutDashboard, 
-  Plugs, 
+  Plug, 
   BarChart3, 
   Clock, 
   Settings, 
@@ -19,7 +18,7 @@ const navItems = [
     path: '/' 
   },
   { 
-    icon: Plugs, 
+    icon: Plug, 
     label: 'API Conexiones', 
     path: '/conexiones' 
   },
@@ -58,7 +57,7 @@ const Sidebar = () => {
       <div className="p-5 border-b border-sidebar-border">
         <h1 className="text-xl font-bold flex items-center gap-2">
           <span className="text-finance-gold">
-            <Plugs size={24} />
+            <Plug size={24} />
           </span>
           FinanceHub
         </h1>
