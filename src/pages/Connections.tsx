@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { 
   Plus,
@@ -26,6 +25,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
+import { useForm } from 'react-hook-form';
 import {
   Form,
   FormControl,
@@ -89,6 +89,12 @@ const Connections = () => {
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [selectedAPI, setSelectedAPI] = useState<string | null>(null);
   const [apiKey, setApiKey] = useState('');
+  
+  const form = useForm({
+    defaultValues: {
+      apiKey: '',
+    }
+  });
   
   const filteredConnections = connections.filter(connection => {
     const matchesSearch = 
@@ -186,47 +192,60 @@ const Connections = () => {
               </DialogDescription>
             </DialogHeader>
             
-            <div className="grid gap-6 py-4">
-              <div className="grid gap-3">
-                <FormLabel>Seleccionar API</FormLabel>
-                <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
-                  {availableAPIs.map(api => (
-                    <div 
-                      key={api.id}
-                      className={`border rounded-md p-3 flex flex-col items-center cursor-pointer hover:bg-accent transition-colors ${selectedAPI === api.id ? 'border-primary bg-accent' : ''}`}
-                      onClick={() => setSelectedAPI(api.id)}
-                    >
-                      <div className="w-12 h-12 flex items-center justify-center mb-2">
-                        <img src={api.logo} alt={api.name} className="w-full h-full object-contain" />
+            <Form {...form}>
+              <div className="grid gap-6 py-4">
+                <div className="grid gap-3">
+                  <FormLabel>Seleccionar API</FormLabel>
+                  <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
+                    {availableAPIs.map(api => (
+                      <div 
+                        key={api.id}
+                        className={`border rounded-md p-3 flex flex-col items-center cursor-pointer hover:bg-accent transition-colors ${selectedAPI === api.id ? 'border-primary bg-accent' : ''}`}
+                        onClick={() => setSelectedAPI(api.id)}
+                      >
+                        <div className="w-12 h-12 flex items-center justify-center mb-2">
+                          <img src={api.logo} alt={api.name} className="w-full h-full object-contain" />
+                        </div>
+                        <span className="text-sm font-medium">{api.name}</span>
+                        <span className="text-xs text-muted-foreground">{api.category}</span>
                       </div>
-                      <span className="text-sm font-medium">{api.name}</span>
-                      <span className="text-xs text-muted-foreground">{api.category}</span>
-                    </div>
-                  ))}
+                    ))}
+                  </div>
+                </div>
+                
+                <div className="grid gap-3">
+                  <FormLabel>Credenciales API</FormLabel>
+                  {selectedAPI && (
+                    <>
+                      <FormField
+                        control={form.control}
+                        name="apiKey"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormControl>
+                              <Textarea
+                                placeholder="Pega tu API key o secreto aquí"
+                                value={apiKey}
+                                onChange={(e) => setApiKey(e.target.value)}
+                                rows={3}
+                                {...field}
+                              />
+                            </FormControl>
+                          </FormItem>
+                        )}
+                      />
+                      <p className="text-xs text-muted-foreground flex items-center gap-1">
+                        <AlertTriangle size={12} />
+                        Las credenciales serán encriptadas y almacenadas de forma segura
+                      </p>
+                    </>
+                  )}
+                  {!selectedAPI && (
+                    <p className="text-sm text-muted-foreground">Selecciona primero una API</p>
+                  )}
                 </div>
               </div>
-              
-              <div className="grid gap-3">
-                <FormLabel>Credenciales API</FormLabel>
-                {selectedAPI && (
-                  <>
-                    <Textarea
-                      placeholder="Pega tu API key o secreto aquí"
-                      value={apiKey}
-                      onChange={(e) => setApiKey(e.target.value)}
-                      rows={3}
-                    />
-                    <p className="text-xs text-muted-foreground flex items-center gap-1">
-                      <AlertTriangle size={12} />
-                      Las credenciales serán encriptadas y almacenadas de forma segura
-                    </p>
-                  </>
-                )}
-                {!selectedAPI && (
-                  <p className="text-sm text-muted-foreground">Selecciona primero una API</p>
-                )}
-              </div>
-            </div>
+            </Form>
             
             <DialogFooter>
               <Button variant="outline" onClick={() => setIsAddDialogOpen(false)}>
