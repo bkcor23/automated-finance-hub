@@ -52,10 +52,14 @@ export const AuthProvider = ({ children }: ChildrenProps) => {
 
       if (settingsError) throw settingsError;
       
-      // Ensure the theme is properly typed for UserSettings
+      // Ensure the theme and language are properly typed for UserSettings
       const settings: UserSettings = {
         ...settingsData,
-        theme: (settingsData?.theme as 'light' | 'dark') || 'light'
+        theme: (settingsData?.theme as 'light' | 'dark') || 'light',
+        language: (settingsData?.language as 'es' | 'en') || 'es',
+        notifications: !!settingsData?.notifications,
+        email_notifications: !!settingsData?.email_notifications,
+        dashboard_widgets: settingsData?.dashboard_widgets || []
       };
 
       // Registrar login exitoso

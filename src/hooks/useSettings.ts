@@ -22,10 +22,14 @@ export const useSettings = () => {
 
     if (error) throw error;
     
-    // Ensure the theme is properly typed
+    // Ensure proper typing for settings
     return {
       ...data,
-      theme: (data.theme as 'light' | 'dark') || 'light'
+      theme: (data.theme as 'light' | 'dark') || 'light',
+      language: (data.language as 'es' | 'en') || 'es',
+      notifications: !!data.notifications,
+      email_notifications: !!data.email_notifications,
+      dashboard_widgets: data.dashboard_widgets || []
     } as UserSettings;
   };
 
@@ -51,10 +55,14 @@ export const useSettings = () => {
 
       if (error) throw error;
       
-      // Ensure the returned data is correctly typed
+      // Ensure proper typing for updated settings
       return {
         ...data,
-        theme: (data.theme as 'light' | 'dark') || 'light'
+        theme: (data.theme as 'light' | 'dark') || 'light',
+        language: (data.language as 'es' | 'en') || 'es',
+        notifications: !!data.notifications,
+        email_notifications: !!data.email_notifications,
+        dashboard_widgets: data.dashboard_widgets || []
       } as UserSettings;
     },
     onSuccess: (data) => {
