@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { cn } from '@/lib/utils';
@@ -64,7 +65,7 @@ export default function Sidebar({
       {/* Sidebar */}
       <div
         className={cn(
-          "flex flex-col h-screen bg-background border-r transition-all duration-300 overflow-hidden",
+          "flex flex-col h-screen bg-sidebar text-sidebar-foreground border-r border-sidebar-border transition-all duration-300 overflow-hidden",
           collapsed ? "w-16" : "w-64",
           isMobile && collapsed && "-ml-16",
           isMobile && "fixed z-40 h-full",
@@ -73,13 +74,13 @@ export default function Sidebar({
         {...props}
       >
         {/* Logo */}
-        <div className="p-4 flex items-center justify-center h-14 border-b">
+        <div className="p-4 flex items-center justify-center h-14 border-b border-sidebar-border">
           {collapsed ? (
-            <BarChart3 className="h-6 w-6 text-primary" />
+            <BarChart3 className="h-6 w-6 text-sidebar-primary" />
           ) : (
             <div className="flex items-center">
-              <BarChart3 className="h-6 w-6 text-primary mr-2" />
-              <span className="text-lg font-bold tracking-tight">Finance Hub</span>
+              <BarChart3 className="h-6 w-6 text-sidebar-primary mr-2" />
+              <span className="text-lg font-bold tracking-tight text-sidebar-foreground">Finance Hub</span>
             </div>
           )}
         </div>
@@ -111,7 +112,7 @@ export default function Sidebar({
             collapsed={collapsed}
           />
 
-          <div className="mt-2 mb-2 border-t mx-3"></div>
+          <div className="mt-2 mb-2 border-t border-sidebar-border mx-3"></div>
 
           <NavItem
             icon={<Settings className="h-4 w-4" />}
@@ -129,10 +130,10 @@ export default function Sidebar({
           {/* Sección administrativa solo visible para administradores */}
           {hasRole('admin') && (
             <>
-              <div className="mt-2 mb-2 border-t mx-3"></div>
+              <div className="mt-2 mb-2 border-t border-sidebar-border mx-3"></div>
               
               <div className={cn(
-                "px-3 text-xs font-semibold text-muted-foreground",
+                "px-3 text-xs font-semibold text-sidebar-foreground/70",
                 collapsed ? "text-center" : "text-left"
               )}>
                 {!collapsed && "ADMIN"}
@@ -156,11 +157,11 @@ export default function Sidebar({
         </nav>
 
         {/* Cerrar sesión */}
-        <div className="p-4 border-t">
+        <div className="p-4 border-t border-sidebar-border">
           <Button
             variant="ghost"
             className={cn(
-              "w-full flex items-center justify-start",
+              "w-full flex items-center justify-start text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground",
               collapsed && "justify-center"
             )}
             onClick={handleLogout}
@@ -172,12 +173,12 @@ export default function Sidebar({
 
         {/* Control de colapso (solo en escritorio) */}
         {!isMobile && (
-          <div className="p-2 border-t flex justify-center">
+          <div className="p-2 border-t border-sidebar-border flex justify-center">
             <Button
               variant="ghost"
               size="icon"
               onClick={toggleSidebar}
-              className="h-6 w-6"
+              className="h-6 w-6 text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
             >
               {collapsed ? (
                 <svg
@@ -235,7 +236,7 @@ function NavItem({ icon, label, to, collapsed }: NavItemProps) {
     <Link
       to={to}
       className={cn(
-        "flex items-center px-3 py-2 mx-2 my-1 rounded-md text-sm transition-colors hover:bg-accent",
+        "flex items-center px-3 py-2 mx-2 my-1 rounded-md text-sm transition-colors hover:bg-sidebar-accent hover:text-sidebar-accent-foreground",
         collapsed ? "justify-center" : "justify-start"
       )}
     >
