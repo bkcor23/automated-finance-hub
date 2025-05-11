@@ -1,12 +1,13 @@
 
 import React from 'react';
-import { Navigate, Outlet } from 'react-router-dom';
+import { Navigate, Outlet, useLocation } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { ShieldAlert } from 'lucide-react';
 
 const AdminRoute = () => {
   const { hasRole, authState } = useAuth();
   const { isLoading } = authState;
+  const location = useLocation();
 
   if (isLoading) {
     return (
@@ -14,6 +15,11 @@ const AdminRoute = () => {
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
       </div>
     );
+  }
+
+  // Verificar si el usuario está autenticado
+  if (!authState.user) {
+    return <Navigate to="/auth/login" state={{ from: location.pathname }} replace />;
   }
 
   // Si el usuario no es administrador, redirigir al dashboard

@@ -49,7 +49,7 @@ const UserManagement = () => {
   }, [hasRole]);
 
   // Consultar todos los usuarios
-  const { data: users, isLoading } = useQuery({
+  const { data: users, isLoading, error } = useQuery({
     queryKey: ['users'],
     queryFn: async () => {
       const { data, error } = await supabase
@@ -121,6 +121,18 @@ const UserManagement = () => {
           <ShieldAlert className="w-12 h-12 text-destructive mx-auto mb-4" />
           <h2 className="text-2xl font-bold">Acceso Restringido</h2>
           <p className="text-muted-foreground mt-2">No tienes permisos de administrador para acceder a esta sección.</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="flex items-center justify-center h-96">
+        <div className="text-center">
+          <ShieldAlert className="w-12 h-12 text-destructive mx-auto mb-4" />
+          <h2 className="text-2xl font-bold">Error</h2>
+          <p className="text-muted-foreground mt-2">Error al cargar usuarios: {(error as Error).message}</p>
         </div>
       </div>
     );

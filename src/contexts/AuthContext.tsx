@@ -68,7 +68,7 @@ export const AuthProvider = ({ children }: ChildrenProps) => {
         language: (settingsData?.language as 'es' | 'en') || 'es',
         notifications: !!settingsData?.notifications,
         email_notifications: !!settingsData?.email_notifications,
-        // Ensure dashboard_widgets is always an array
+        // Asegurar que dashboard_widgets sea siempre un array
         dashboard_widgets: Array.isArray(settingsData?.dashboard_widgets) 
           ? settingsData?.dashboard_widgets 
           : []

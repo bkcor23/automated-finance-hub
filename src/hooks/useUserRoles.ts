@@ -1,109 +1,109 @@
 
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { UserRole } from '@/types';
 import { toast } from 'sonner';
-import { useAuth } from '@/contexts/AuthContext';
+import { UserRole } from '@/types';
+
+interface AddRoleParams {
+  userId: string;
+  role: 'admin' | 'user' | 'moderator';
+}
 
 export const useUserRoles = () => {
-  const queryClient = useQueryClient();
-  const { authState } = useAuth();
-  const userId = authState.user?.id;
-  
-  // Fetch all roles if the current user is an admin
-  const fetchAllRoles = async (): Promise<UserRole[]> => {
-    const { data, error } = await supabase
-      .from('user_roles')
-      .select('*')
-      .order('created_at', { ascending: false });
-      
-    if (error) throw error;
-    return data as UserRole[];
-  };
-  
-  // Fetch roles for a specific user
-  const fetchUserRoles = async (targetUserId: string): Promise<UserRole[]> => {
-    const { data, error } = await supabase
-      .from('user_roles')
-      .select('*')
-      .eq('user_id', targetUserId);
-      
-    if (error) throw error;
-    return data as UserRole[];
-  };
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<Error | null>(null);
 
-  // Query for all roles (admin only)
-  const allRolesQuery = useQuery({
-    queryKey: ['roles', 'all'],
-    queryFn: fetchAllRoles,
-    enabled: !!userId && authState.roles?.some(r => r.role === 'admin'),
-    staleTime: 1000 * 60 * 5, // 5 minutes
-  });
-  
-  // Query for the current user's roles
-  const userRolesQuery = useQuery({
-    queryKey: ['roles', userId],
-    queryFn: () => fetchUserRoles(userId!),
-    enabled: !!userId,
-    staleTime: 1000 * 60 * 5, // 5 minutes
-  });
-
-  // Mutation to add a role to a user
-  const addRoleMutation = useMutation({
-    mutationFn: async ({ userId, role }: { userId: string; role: 'admin' | 'user' | 'moderator' }) => {
+  // Obtener roles de un usuario
+  const getUserRoles = async (userId: string) => {
+    try {
+      setIsLoading(true);
+      setError(null);
+      
       const { data, error } = await supabase
         .from('user_roles')
-        .insert({
-          user_id: userId,
-          role
-        })
-        .select()
-        .single();
+        .select('*')
+        .eq('user_id', userId);
         
       if (error) throw error;
-      return data as UserRole;
-    },
-    onSuccess: (_, variables) => {
-      toast.success(`Rol ${variables.role} asignado correctamente`);
-      queryClient.invalidateQueries({ queryKey: ['roles', variables.userId] });
-      queryClient.invalidateQueries({ queryKey: ['roles', 'all'] });
-    },
-    onError: (error: any) => {
-      toast.error(`Error al asignar rol: ${error.message}`);
+      
+      return data as UserRole[];
+    } catch (err) {
+      setError(err as Error);
+      console.error('Error al obtener roles:', err);
+      toast.error('Error al cargar roles de usuario');
+      return [];
+    } finally {
+      setIsLoading(false);
     }
-  });
-  
-  // Mutation to remove a role from a user
-  const removeRoleMutation = useMutation({
-    mutationFn: async (roleId: string) => {
+  };
+
+  // Agregar un rol a un usuario
+  const addRole = async ({ userId, role }: AddRoleParams) => {
+    try {
+      setIsLoading(true);
+      setError(null);
+      
       const { data, error } = await supabase
+        .from('user_roles')
+        .insert([{ user_id: userId, role }])
+        .select();
+        
+      if (error) throw error;
+      
+      toast.success(`Rol ${role} asignado correctamente`);
+      return data[0] as UserRole;
+    } catch (err) {
+      setError(err as Error);
+      console.error('Error al agregar rol:', err);
+      toast.error('Error al asignar rol de usuario');
+      throw err;
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Eliminar un rol de usuario
+  const removeRole = async (roleId: string) => {
+    try {
+      setIsLoading(true);
+      setError(null);
+      
+      const { error } = await supabase
         .from('user_roles')
         .delete()
-        .eq('id', roleId)
-        .select()
-        .single();
+        .eq('id', roleId);
         
       if (error) throw error;
-      return data;
-    },
-    onSuccess: (data: any) => {
+      
       toast.success('Rol eliminado correctamente');
-      queryClient.invalidateQueries({ queryKey: ['roles', data.user_id] });
-      queryClient.invalidateQueries({ queryKey: ['roles', 'all'] });
-    },
-    onError: (error: any) => {
-      toast.error(`Error al eliminar rol: ${error.message}`);
+      return true;
+    } catch (err) {
+      setError(err as Error);
+      console.error('Error al eliminar rol:', err);
+      toast.error('Error al eliminar rol de usuario');
+      throw err;
+    } finally {
+      setIsLoading(false);
     }
-  });
+  };
+
+  // Verificar si un usuario tiene un rol específico
+  const checkIfUserHasRole = async (userId: string, roleName: string) => {
+    try {
+      const roles = await getUserRoles(userId);
+      return roles.some(role => role.role === roleName);
+    } catch (err) {
+      console.error('Error al verificar rol:', err);
+      return false;
+    }
+  };
 
   return {
-    userRoles: userRolesQuery.data || [],
-    allRoles: allRolesQuery.data || [],
-    isLoading: userRolesQuery.isLoading || allRolesQuery.isLoading,
-    isFetching: userRolesQuery.isFetching || allRolesQuery.isFetching,
-    error: userRolesQuery.error || allRolesQuery.error,
-    addRole: addRoleMutation.mutate,
-    removeRole: removeRoleMutation.mutate,
-    fetchUserRoles,
+    getUserRoles,
+    addRole,
+    removeRole,
+    checkIfUserHasRole,
+    isLoading,
+    error
   };
 };
