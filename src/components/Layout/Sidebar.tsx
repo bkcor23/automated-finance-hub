@@ -14,7 +14,7 @@ import {
   UserPlus,
   Menu,
 } from 'lucide-react';
-import { useMobile } from '@/hooks/use-mobile';
+import { useIsMobile } from '@/hooks/use-mobile';
 import { useAuth } from '@/contexts/AuthContext';
 
 interface SidebarProps extends React.HTMLAttributes<HTMLDivElement> {
@@ -29,7 +29,7 @@ export default function Sidebar({
   const [collapsed, setCollapsed] = useState(defaultCollapsed);
   const navigate = useNavigate();
   const { logout, hasRole } = useAuth();
-  const isMobile = useMobile();
+  const isMobile = useIsMobile();
 
   // En móvil, siempre comenzamos colapsado
   React.useEffect(() => {

@@ -61,7 +61,7 @@ const MainLayout = () => {
             'min-w-[240px] md:min-w-[240px]': !isSidebarCollapsed,
           })}
         >
-          <Sidebar isCollapsed={isSidebarCollapsed} />
+          <Sidebar defaultCollapsed={isSidebarCollapsed} />
         </ResizablePanel>
         
         <ResizableHandle withHandle className="bg-border" />
