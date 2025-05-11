@@ -42,7 +42,7 @@ export const AuthProvider = ({ children }: ChildrenProps) => {
         .eq('id', user.id)
         .single();
 
-      if (profileError) throw profileError;
+      if (profileError && profileError.code !== 'PGRST116') throw profileError;
 
       // Cargar roles de usuario
       const { data: rolesData, error: rolesError } = await supabase
@@ -59,20 +59,70 @@ export const AuthProvider = ({ children }: ChildrenProps) => {
         .eq('user_id', user.id)
         .single();
 
-      if (settingsError) throw settingsError;
+      if (settingsError && settingsError.code !== 'PGRST116') throw settingsError;
       
       // Ensure the theme and language are properly typed for UserSettings
       const settings: UserSettings = {
-        ...settingsData,
+        ...(settingsData || {}),
+        id: settingsData?.id || '',
+        user_id: settingsData?.user_id || user.id,
         theme: (settingsData?.theme as 'light' | 'dark') || 'light',
         language: (settingsData?.language as 'es' | 'en') || 'es',
-        notifications: !!settingsData?.notifications,
-        email_notifications: !!settingsData?.email_notifications,
+        notifications: settingsData?.notifications !== undefined ? !!settingsData?.notifications : true,
+        email_notifications: settingsData?.email_notifications !== undefined ? !!settingsData?.email_notifications : true,
         // Asegurar que dashboard_widgets sea siempre un array
         dashboard_widgets: Array.isArray(settingsData?.dashboard_widgets) 
           ? settingsData?.dashboard_widgets 
-          : []
+          : [],
+        created_at: settingsData?.created_at || new Date().toISOString(),
+        updated_at: settingsData?.updated_at || new Date().toISOString()
       };
+
+      // Si no hay perfil o configuración, crearlos
+      if (!profile) {
+        const { data: newProfile, error: newProfileError } = await supabase
+          .from('user_profiles')
+          .insert({
+            id: user.id,
+            email: user.email || '',
+            full_name: user.user_metadata?.full_name || '',
+          })
+          .select()
+          .single();
+
+        if (newProfileError) throw newProfileError;
+
+        // Si se creó un perfil nuevo, actualizarlo
+        if (newProfile) {
+          const { error: logError } = await supabase.functions.invoke('log-security-event', {
+            body: {
+              event_type: 'profile_created',
+              description: 'Perfil creado automáticamente',
+              ip_address: 'client-side',
+              user_agent: navigator.userAgent
+            }
+          });
+
+          if (logError) console.error("Error al registrar evento:", logError);
+        }
+      }
+
+      if (!settingsData) {
+        const { data: newSettings, error: newSettingsError } = await supabase
+          .from('settings')
+          .insert({
+            user_id: user.id,
+            theme: 'light',
+            language: 'es',
+            notifications: true,
+            email_notifications: true,
+            dashboard_widgets: []
+          })
+          .select()
+          .single();
+
+        if (newSettingsError) throw newSettingsError;
+      }
 
       // Registrar login exitoso
       await supabase.functions.invoke('log-security-event', {
@@ -82,11 +132,17 @@ export const AuthProvider = ({ children }: ChildrenProps) => {
           ip_address: 'client-side',
           user_agent: navigator.userAgent
         }
-      });
+      }).catch(err => console.error("Error al registrar login:", err));
 
       setAuthState({
         user,
-        profile,
+        profile: profile || {
+          id: user.id,
+          email: user.email || '',
+          full_name: user.user_metadata?.full_name || '',
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString()
+        },
         roles: rolesData || [],
         settings,
         isLoading: false,

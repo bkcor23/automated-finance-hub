@@ -1,81 +1,77 @@
 
-import { Toaster } from "@/components/ui/toaster";
-import { Toaster as Sonner } from "@/components/ui/sonner";
-import { TooltipProvider } from "@/components/ui/tooltip";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
-import { AuthProvider } from "@/contexts/AuthContext";
-import MainLayout from "./components/Layout/MainLayout";
-import Dashboard from "./pages/Dashboard";
-import Connections from "./pages/Connections";
-import Transactions from "./pages/Transactions";
-import Automations from "./pages/Automations";
-import SettingsPage from "./pages/Settings/SettingsPage";
-import SecurityPage from "./pages/Security/SecurityPage";
-import AuthLayout from "./pages/Auth/AuthLayout";
-import LoginPage from "./pages/Auth/LoginPage";
-import SignupPage from "./pages/Auth/SignupPage";
-import NotFound from "./pages/NotFound";
-import UserManagement from "./pages/Admin/UserManagement";
-import AdminRoute from "./components/Auth/AdminRoute";
+import { createBrowserRouter, RouterProvider, Navigate } from 'react-router-dom';
+import { AuthProvider } from './contexts/AuthContext';
+import MainLayout from './components/Layout/MainLayout';
+import AuthLayout from './pages/Auth/AuthLayout';
+import LoginPage from './pages/Auth/LoginPage';
+import SignupPage from './pages/Auth/SignupPage';
+import ProtectedRoute from './components/Auth/ProtectedRoute';
+import AdminRoute from './components/Auth/AdminRoute';
+import Dashboard from './pages/Dashboard';
+import Transactions from './pages/Transactions';
+import Connections from './pages/Connections';
+import Automations from './pages/Automations';
+import NotFound from './pages/NotFound';
+import UserManagement from './pages/Admin/UserManagement';
+import SettingsPage from './pages/Settings/SettingsPage';
+import SecurityPage from './pages/Security/SecurityPage';
+import CreateAdmin from './pages/Admin/CreateAdmin';
 
-// Crear cliente de Query
-const queryClient = new QueryClient({
-  defaultOptions: {
-    queries: {
-      refetchOnWindowFocus: false,
-      retry: 1,
-    },
-  },
-});
-
-// Determinar el basename para despliegue en GitHub Pages
-const getBasename = () => {
-  // En desarrollo, usar "/"
-  // En producción con GitHub Pages, usar "/repository-name"
-  return import.meta.env.MODE === 'production' ? '/automated-finance-hub' : '/';
-};
-
-const App = () => (
-  <QueryClientProvider client={queryClient}>
-    <TooltipProvider>
-      <BrowserRouter basename={getBasename()}>
+// Configuración de rutas con React Router
+const router = createBrowserRouter(
+  [
+    {
+      path: '/',
+      element: (
         <AuthProvider>
-          <Toaster />
-          <Sonner />
-          <Routes>
-            {/* Rutas autenticadas dentro de MainLayout */}
-            <Route path="/" element={<MainLayout />}>
-              <Route index element={<Dashboard />} />
-              <Route path="conexiones" element={<Connections />} />
-              <Route path="transacciones" element={<Transactions />} />
-              <Route path="automatizaciones" element={<Automations />} />
-              <Route path="configuracion" element={<SettingsPage />} />
-              <Route path="seguridad" element={<SecurityPage />} />
-              
-              {/* Rutas de administración (protegidas) */}
-              <Route path="admin" element={<AdminRoute />}>
-                <Route path="usuarios" element={<UserManagement />} />
-              </Route>
-            </Route>
-            
-            {/* Rutas de autenticación */}
-            <Route path="/auth" element={<AuthLayout />}>
-              <Route index element={<Navigate to="/auth/login" replace />} />
-              <Route path="login" element={<LoginPage />} />
-              <Route path="signup" element={<SignupPage />} />
-            </Route>
-            
-            {/* Ruta Index para redirigir al dashboard */}
-            <Route path="/index" element={<Navigate to="/" replace />} />
-            
-            {/* Cualquier otra ruta redirige a la página de 404 */}
-            <Route path="*" element={<NotFound />} />
-          </Routes>
+          <ProtectedRoute>
+            <MainLayout />
+          </ProtectedRoute>
         </AuthProvider>
-      </BrowserRouter>
-    </TooltipProvider>
-  </QueryClientProvider>
+      ),
+      children: [
+        { index: true, element: <Dashboard /> },
+        { path: 'transactions', element: <Transactions /> },
+        { path: 'connections', element: <Connections /> },
+        { path: 'automations', element: <Automations /> },
+        { path: 'settings', element: <SettingsPage /> },
+        { path: 'security', element: <SecurityPage /> },
+        {
+          path: 'admin',
+          element: <AdminRoute />,
+          children: [
+            { index: true, element: <Navigate to="/admin/users" replace /> },
+            { path: 'users', element: <UserManagement /> },
+            { path: 'create-admin', element: <CreateAdmin /> },
+          ],
+        },
+        // Redirigir rutas no encontradas al dashboard
+        { path: '*', element: <Navigate to="/" replace /> },
+      ],
+    },
+    {
+      path: '/auth',
+      element: (
+        <AuthProvider>
+          <AuthLayout />
+        </AuthProvider>
+      ),
+      children: [
+        { index: true, element: <Navigate to="/auth/login" replace /> },
+        { path: 'login', element: <LoginPage /> },
+        { path: 'signup', element: <SignupPage /> },
+      ],
+    },
+    // Fallback para rutas fuera de la jerarquía principal
+    { path: '*', element: <Navigate to="/" replace /> },
+  ],
+  {
+    basename: import.meta.env.BASE_URL || '/',
+  }
 );
+
+function App() {
+  return <RouterProvider router={router} />;
+}
 
 export default App;

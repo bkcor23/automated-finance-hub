@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { UserProfile, UserRole } from '@/types';
 import { useAuth } from '@/contexts/AuthContext';
@@ -33,13 +33,14 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
-import { Shield, ShieldAlert, ShieldCheck, MoreVertical, User, Users } from 'lucide-react';
+import { Shield, ShieldAlert, ShieldCheck, MoreVertical, User, Users, RefreshCw } from 'lucide-react';
 
 const UserManagement = () => {
   const { authState, hasRole } = useAuth();
   const { addRole, removeRole } = useUserRoles();
   const [selectedUser, setSelectedUser] = useState<UserProfile | null>(null);
   const [isRoleDialogOpen, setIsRoleDialogOpen] = useState(false);
+  const queryClient = useQueryClient();
   
   // Verificar que el usuario actual tiene rol de administrador
   useEffect(() => {
@@ -49,7 +50,7 @@ const UserManagement = () => {
   }, [hasRole]);
 
   // Consultar todos los usuarios
-  const { data: users, isLoading, error } = useQuery({
+  const { data: users, isLoading, error, refetch } = useQuery({
     queryKey: ['users'],
     queryFn: async () => {
       const { data, error } = await supabase
@@ -64,7 +65,7 @@ const UserManagement = () => {
   });
 
   // Consultar todos los roles de todos los usuarios
-  const { data: allRoles } = useQuery({
+  const { data: allRoles, refetch: refetchRoles } = useQuery({
     queryKey: ['all-roles'],
     queryFn: async () => {
       const { data, error } = await supabase
@@ -102,6 +103,10 @@ const UserManagement = () => {
         // Si no tiene el rol, agregarlo
         await addRole({ userId, role: roleName });
       }
+      
+      // Refrescar los roles después de la actualización
+      await refetchRoles();
+
     } catch (error) {
       console.error("Error al cambiar rol:", error);
       toast.error("Error al modificar roles de usuario");
@@ -112,6 +117,18 @@ const UserManagement = () => {
   const handleManageRoles = (user: UserProfile) => {
     setSelectedUser(user);
     setIsRoleDialogOpen(true);
+  };
+
+  // Refrescar datos
+  const handleRefreshData = async () => {
+    try {
+      toast.info("Actualizando datos...");
+      await Promise.all([refetch(), refetchRoles()]);
+      toast.success("Datos actualizados correctamente");
+    } catch (error) {
+      console.error("Error al refrescar datos:", error);
+      toast.error("Error al actualizar datos");
+    }
   };
 
   if (!hasRole('admin')) {
@@ -133,6 +150,9 @@ const UserManagement = () => {
           <ShieldAlert className="w-12 h-12 text-destructive mx-auto mb-4" />
           <h2 className="text-2xl font-bold">Error</h2>
           <p className="text-muted-foreground mt-2">Error al cargar usuarios: {(error as Error).message}</p>
+          <Button onClick={handleRefreshData} className="mt-4">
+            <RefreshCw className="w-4 h-4 mr-2" /> Reintentar
+          </Button>
         </div>
       </div>
     );
@@ -149,9 +169,14 @@ const UserManagement = () => {
           <h1 className="text-3xl font-bold">Gestión de Usuarios</h1>
           <p className="text-muted-foreground">Administra los usuarios y sus roles en la plataforma</p>
         </div>
-        <div className="flex items-center space-x-2">
-          <Users className="w-5 h-5 mr-1" />
-          <span className="font-medium">{users?.length || 0} usuarios</span>
+        <div className="flex items-center space-x-4">
+          <div className="flex items-center">
+            <Users className="w-5 h-5 mr-1" />
+            <span className="font-medium">{users?.length || 0} usuarios</span>
+          </div>
+          <Button onClick={handleRefreshData} size="sm" variant="outline">
+            <RefreshCw className="w-4 h-4 mr-2" /> Actualizar
+          </Button>
         </div>
       </div>
 
@@ -167,56 +192,64 @@ const UserManagement = () => {
           </TableRow>
         </TableHeader>
         <TableBody>
-          {users?.map(user => (
-            <TableRow key={user.id}>
-              <TableCell className="font-medium">
-                <div className="flex items-center space-x-2">
-                  <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center">
-                    <User className="w-4 h-4" />
+          {users && users.length > 0 ? (
+            users.map(user => (
+              <TableRow key={user.id}>
+                <TableCell className="font-medium">
+                  <div className="flex items-center space-x-2">
+                    <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center">
+                      <User className="w-4 h-4" />
+                    </div>
+                    <span>{user.full_name || "Sin nombre"}</span>
                   </div>
-                  <span>{user.full_name || "Sin nombre"}</span>
-                </div>
-              </TableCell>
-              <TableCell>{user.email}</TableCell>
-              <TableCell>{new Date(user.created_at).toLocaleDateString()}</TableCell>
-              <TableCell>
-                <div className="flex space-x-1">
-                  {userHasRole(user.id, 'admin') && (
-                    <div className="bg-destructive/10 text-destructive text-xs px-2 py-1 rounded-md flex items-center">
-                      <ShieldAlert className="w-3 h-3 mr-1" /> Admin
-                    </div>
-                  )}
-                  {userHasRole(user.id, 'moderator') && (
-                    <div className="bg-warning/10 text-warning-foreground text-xs px-2 py-1 rounded-md flex items-center">
-                      <Shield className="w-3 h-3 mr-1" /> Moderador
-                    </div>
-                  )}
-                  {userHasRole(user.id, 'user') && (
-                    <div className="bg-primary/10 text-primary text-xs px-2 py-1 rounded-md flex items-center">
-                      <ShieldCheck className="w-3 h-3 mr-1" /> Usuario
-                    </div>
-                  )}
-                </div>
-              </TableCell>
-              <TableCell>
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button variant="ghost" size="icon">
-                      <MoreVertical className="w-4 h-4" />
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end">
-                    <DropdownMenuLabel>Acciones</DropdownMenuLabel>
-                    <DropdownMenuSeparator />
-                    <DropdownMenuItem onClick={() => handleManageRoles(user)}>
-                      <Shield className="w-4 h-4 mr-2" />
-                      Gestionar roles
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
+                </TableCell>
+                <TableCell>{user.email}</TableCell>
+                <TableCell>{new Date(user.created_at).toLocaleDateString()}</TableCell>
+                <TableCell>
+                  <div className="flex space-x-1">
+                    {userHasRole(user.id, 'admin') && (
+                      <div className="bg-destructive/10 text-destructive text-xs px-2 py-1 rounded-md flex items-center">
+                        <ShieldAlert className="w-3 h-3 mr-1" /> Admin
+                      </div>
+                    )}
+                    {userHasRole(user.id, 'moderator') && (
+                      <div className="bg-warning/10 text-warning-foreground text-xs px-2 py-1 rounded-md flex items-center">
+                        <Shield className="w-3 h-3 mr-1" /> Moderador
+                      </div>
+                    )}
+                    {userHasRole(user.id, 'user') && (
+                      <div className="bg-primary/10 text-primary text-xs px-2 py-1 rounded-md flex items-center">
+                        <ShieldCheck className="w-3 h-3 mr-1" /> Usuario
+                      </div>
+                    )}
+                  </div>
+                </TableCell>
+                <TableCell>
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button variant="ghost" size="icon">
+                        <MoreVertical className="w-4 h-4" />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end">
+                      <DropdownMenuLabel>Acciones</DropdownMenuLabel>
+                      <DropdownMenuSeparator />
+                      <DropdownMenuItem onClick={() => handleManageRoles(user)}>
+                        <Shield className="w-4 h-4 mr-2" />
+                        Gestionar roles
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                </TableCell>
+              </TableRow>
+            ))
+          ) : (
+            <TableRow>
+              <TableCell colSpan={5} className="text-center py-10">
+                No hay usuarios registrados
               </TableCell>
             </TableRow>
-          ))}
+          )}
         </TableBody>
       </Table>
 
