@@ -16,6 +16,8 @@ import AuthLayout from "./pages/Auth/AuthLayout";
 import LoginPage from "./pages/Auth/LoginPage";
 import SignupPage from "./pages/Auth/SignupPage";
 import NotFound from "./pages/NotFound";
+import UserManagement from "./pages/Admin/UserManagement";
+import AdminRoute from "./components/Auth/AdminRoute";
 
 // Crear cliente de Query
 const queryClient = new QueryClient({
@@ -50,6 +52,11 @@ const App = () => (
               <Route path="automatizaciones" element={<Automations />} />
               <Route path="configuracion" element={<SettingsPage />} />
               <Route path="seguridad" element={<SecurityPage />} />
+              
+              {/* Rutas de administración (protegidas) */}
+              <Route path="admin" element={<AdminRoute />}>
+                <Route path="usuarios" element={<UserManagement />} />
+              </Route>
             </Route>
             
             {/* Rutas de autenticación */}

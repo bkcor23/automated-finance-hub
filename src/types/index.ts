@@ -11,6 +11,14 @@ export type UserProfile = {
   updated_at: string;
 };
 
+export type UserRole = {
+  id: string;
+  user_id: string;
+  role: 'admin' | 'user' | 'moderator';
+  created_at: string;
+  updated_at: string;
+};
+
 export type Connection = {
   id: string;
   user_id: string;
@@ -91,6 +99,7 @@ export type SecurityLog = {
 export type AuthState = {
   user: User | null;
   profile: UserProfile | null;
+  roles: UserRole[];
   settings: UserSettings | null;
   isLoading: boolean;
   error: Error | null;
@@ -102,6 +111,7 @@ export type AuthContextType = {
   signup: (email: string, password: string, fullName?: string) => Promise<void>;
   logout: () => Promise<void>;
   updateProfile: (profile: Partial<UserProfile>) => Promise<void>;
+  hasRole: (role: 'admin' | 'user' | 'moderator') => boolean;
 };
 
 export type ChildrenProps = {

@@ -4,11 +4,12 @@ import { User, Session } from '@supabase/supabase-js';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
-import { AuthContextType, AuthState, UserProfile, UserSettings, ChildrenProps } from '@/types';
+import { AuthContextType, AuthState, UserProfile, UserRole, UserSettings, ChildrenProps } from '@/types';
 
 const initialState: AuthState = {
   user: null,
   profile: null,
+  roles: [],
   settings: null,
   isLoading: true,
   error: null
@@ -42,6 +43,14 @@ export const AuthProvider = ({ children }: ChildrenProps) => {
         .single();
 
       if (profileError) throw profileError;
+
+      // Cargar roles de usuario
+      const { data: rolesData, error: rolesError } = await supabase
+        .from('user_roles')
+        .select('*')
+        .eq('user_id', user.id);
+
+      if (rolesError) throw rolesError;
 
       // Cargar configuración
       const { data: settingsData, error: settingsError } = await supabase
@@ -78,6 +87,7 @@ export const AuthProvider = ({ children }: ChildrenProps) => {
       setAuthState({
         user,
         profile,
+        roles: rolesData || [],
         settings,
         isLoading: false,
         error: null
@@ -134,6 +144,12 @@ export const AuthProvider = ({ children }: ChildrenProps) => {
       navigate('/auth/login', { state: { from: path } });
     }
   }, [authState.isLoading, authState.user, location.pathname, navigate]);
+
+  // Verificar si el usuario tiene un rol específico
+  const hasRole = (role: 'admin' | 'user' | 'moderator'): boolean => {
+    if (!authState.user || !authState.roles) return false;
+    return authState.roles.some(r => r.role === role);
+  };
 
   // Iniciar sesión
   const login = async (email: string, password: string) => {
@@ -228,7 +244,8 @@ export const AuthProvider = ({ children }: ChildrenProps) => {
     login,
     signup,
     logout,
-    updateProfile
+    updateProfile,
+    hasRole
   };
 
   return (
