@@ -6,7 +6,7 @@ import { useIsMobile } from '@/hooks/use-mobile';
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from '@/components/ui/resizable';
 import { cn } from '@/lib/utils';
 import Header from './Header';
-import Sidebar from './Sidebar';
+import SidebarWrapper from './SidebarWrapper';
 
 const MainLayout = () => {
   const { pathname } = useLocation();
@@ -61,7 +61,7 @@ const MainLayout = () => {
             'min-w-[240px] md:min-w-[240px]': !isSidebarCollapsed,
           })}
         >
-          <Sidebar defaultCollapsed={isSidebarCollapsed} />
+          <SidebarWrapper defaultCollapsed={isSidebarCollapsed} />
         </ResizablePanel>
         
         <ResizableHandle withHandle className="bg-border" />

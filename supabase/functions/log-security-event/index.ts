@@ -1,126 +1,83 @@
+// Follow this setup guide to integrate the Deno runtime:
+// https://docs.deno.land/runtime/manual/getting_started/setup_your_environment
+// This entrypoint file does NOT use deno-specific functionality,
+// so could be renamed to .js (but keeping as .ts).
 
-import { serve } from 'https://deno.land/std@0.177.0/http/server.ts';
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.21.0';
+// Import using the latest Supabase JS URL format
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.7';
+import { corsHeaders } from '../_shared/cors.ts';
 
-// Configuramos CORS para permitir llamadas desde la aplicación
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type'
-};
+console.log("Security log event function initialized");
 
-// Manejamos solicitudes CORS preflight
-const handleCors = (req: Request) => {
+interface SecurityLogRequest {
+  event_type: string;
+  description: string;
+  ip_address?: string;
+  user_agent?: string;
+}
+
+const handler = async (req: Request): Promise<Response> => {
+  // This is needed if you're planning to invoke your function from a browser.
   if (req.method === 'OPTIONS') {
-    return new Response(null, { headers: corsHeaders });
+    return new Response('ok', { headers: corsHeaders });
   }
-  return null;
-};
 
-serve(async (req: Request) => {
   try {
-    // Manejar CORS preflight
-    const corsResponse = handleCors(req);
-    if (corsResponse) return corsResponse;
-
-    // Verificar que la solicitud es POST
-    if (req.method !== 'POST') {
-      return new Response(JSON.stringify({ 
-        error: 'Método no permitido' 
-      }), {
-        status: 405,
-        headers: {
-          ...corsHeaders,
-          'Content-Type': 'application/json'
-        }
-      });
-    }
-
-    // Crear cliente Supabase usando el token de autorización de la solicitud
-    const authHeader = req.headers.get('Authorization') || '';
-    const supabaseClient = createClient(
+    const { event_type, description, ip_address, user_agent } = await req.json() as SecurityLogRequest;
+    
+    // Create a Supabase client with the Admin key
+    const supabase = createClient(
+      // Supabase API URL - env var exported by default when deployed.
       Deno.env.get('SUPABASE_URL') ?? '',
-      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '',
-      {
-        global: {
-          headers: { Authorization: authHeader }
-        },
-        auth: {
-          persistSession: false
-        }
-      }
+      // Supabase API SERVICE ROLE KEY - env var exported by default when deployed.
+      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     );
-
-    // Obtener la sesión del usuario (para verificar que está autenticado)
-    const { data: { session }, error: sessionError } = await supabaseClient.auth.getSession();
-    if (sessionError || !session) {
-      return new Response(JSON.stringify({
-        error: 'Unauthorized',
-        message: 'No hay una sesión activa'
-      }), {
-        status: 401,
-        headers: {
-          ...corsHeaders,
-          'Content-Type': 'application/json'
-        }
-      });
+    
+    // Get authorization header
+    const authHeader = req.headers.get('Authorization');
+    if (!authHeader) {
+      throw new Error('No authorization header');
     }
 
-    // Extraer datos del cuerpo de la solicitud
-    const requestData = await req.json();
-    const { event_type, description, ip_address, user_agent } = requestData;
-
-    // Validar datos
-    if (!event_type || !description) {
-      return new Response(JSON.stringify({
-        error: 'Datos incompletos',
-        message: 'El tipo de evento y la descripción son obligatorios'
-      }), {
-        status: 400,
-        headers: {
-          ...corsHeaders,
-          'Content-Type': 'application/json'
-        }
-      });
+    // Extract the token
+    const token = authHeader.replace('Bearer ', '');
+    
+    // Verify the JWT
+    const { data: { user }, error: authError } = await supabase.auth.getUser(token);
+    
+    if (authError || !user) {
+      throw new Error('Invalid token');
+    }
+    
+    // Log the security event
+    const { error } = await supabase.rpc('log_security_event', { 
+      event_type, 
+      description, 
+      ip_address, 
+      user_agent 
+    });
+    
+    if (error) {
+      throw new Error(error.message);
     }
 
-    // Registrar evento usando la función RPC
-    const { data, error } = await supabaseClient.rpc(
-      'log_security_event',
-      {
-        event_type,
-        description,
-        ip_address,
-        user_agent
-      }
-    );
-
-    if (error) throw error;
-
-    // Devolver respuesta exitosa
     return new Response(JSON.stringify({
       success: true,
-      message: 'Evento registrado exitosamente',
-      data
+      message: 'Security event logged successfully'
     }), {
       status: 200,
-      headers: {
-        ...corsHeaders,
-        'Content-Type': 'application/json'
-      }
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
   } catch (error) {
-    // Manejar errores
-    console.error('Error en la función log-security-event:', error);
-    
     return new Response(JSON.stringify({
-      error: 'Error interno',
-      message: error.message
+      error: error.message,
+      success: false,
     }), {
       status: 500,
-      headers: {
-        ...corsHeaders,
-        'Content-Type': 'application/json'
-      }
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
   }
-});
+};
+
+// Set handler for serverless function
+Deno.serve(handler);

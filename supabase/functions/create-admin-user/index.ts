@@ -1,107 +1,71 @@
+// Follow this setup guide to integrate the Deno runtime:
+// https://docs.deno.land/runtime/manual/getting_started/setup_your_environment
+// This entrypoint file does NOT use deno-specific functionality,
+// so could be renamed to .js (but keeping as .ts).
 
-import { serve } from 'https://deno.land/std@0.177.0/http/server.ts'
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.29.0'
+// Import using the latest Supabase JS URL format
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.7';
+import { corsHeaders } from '../_shared/cors.ts';
 
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-  'Access-Control-Allow-Methods': 'POST, OPTIONS',
+console.log("Admin user creation function initialized");
+
+interface RequestBody {
+  email: string;
+  password: string;
 }
 
-serve(async (req) => {
-  // Manejo de preflight OPTIONS request
+const handler = async (req: Request): Promise<Response> => {
+  // This is needed if you're planning to invoke your function from a browser.
   if (req.method === 'OPTIONS') {
-    return new Response('ok', { headers: corsHeaders })
+    return new Response('ok', { headers: corsHeaders });
   }
 
   try {
-    const { adminEmail, adminPassword, adminName } = await req.json()
-
-    // Validación básica
-    if (!adminEmail || !adminPassword || !adminName) {
-      return new Response(
-        JSON.stringify({
-          error: 'Se requieren email, contraseña y nombre para crear un admin',
-        }),
-        {
-          status: 400,
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        }
-      )
-    }
-
-    // Crear cliente de Supabase
-    const supabaseClient = createClient(
+    const { email, password } = await req.json() as RequestBody;
+    
+    // Create a Supabase client with the Admin key
+    const supabase = createClient(
+      // Supabase API URL - env var exported by default when deployed.
       Deno.env.get('SUPABASE_URL') ?? '',
-      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '',
-      {
-        auth: {
-          autoRefreshToken: false,
-          persistSession: false,
-        },
-      }
-    )
+      // Supabase API SERVICE ROLE KEY - env var exported by default when deployed.
+      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
+    );
+    
+    // Create user
+    const { data, error: signUpError } = await supabase.auth.admin.createUser({
+      email,
+      password,
+      email_confirm: true, // Auto-confirm the user
+    });
 
-    // Crear usuario en Auth
-    const { data: authData, error: authError } = await supabaseClient.auth.admin.createUser({
-      email: adminEmail,
-      password: adminPassword,
-      email_confirm: true,
-      user_metadata: { full_name: adminName },
-    })
-
-    if (authError) throw authError
-
-    // Verificar que se haya creado el usuario
-    if (!authData.user) {
-      throw new Error('No se pudo crear el usuario admin')
-    }
-
-    // Insertar perfil en la tabla de perfiles
-    const { error: profileError } = await supabaseClient
-      .from('profiles')
-      .insert({
-        id: authData.user.id,
-        email: adminEmail,
-        full_name: adminName,
-        roles: ['admin'],
-        avatar_url: null,
-      })
-
-    if (profileError) throw profileError
-
-    // Registrar evento de seguridad
-    await supabaseClient
-      .from('security_logs')
-      .insert({
-        user_id: authData.user.id,
-        event_type: 'admin_created',
-        description: `Admin user created: ${adminEmail}`,
-        ip_address: req.headers.get('x-forwarded-for') || 'unknown',
-        user_agent: req.headers.get('user-agent') || 'unknown',
-      })
-
-    return new Response(
-      JSON.stringify({ 
-        success: true, 
-        message: 'Usuario admin creado exitosamente', 
-        userId: authData.user.id 
-      }),
-      {
-        status: 200,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      }
-    )
-  } catch (error) {
-    return new Response(
-      JSON.stringify({ 
-        error: 'Error al crear usuario admin', 
-        details: error.message 
-      }),
-      {
+    if (signUpError) {
+      return new Response(JSON.stringify({
+        error: signUpError.message,
+        success: false,
+      }), {
         status: 400,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      }
-    )
+      });
+    }
+
+    return new Response(JSON.stringify({
+      user: data.user,
+      message: 'Admin user created successfully',
+      success: true,
+    }), {
+      status: 200,
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    });
+  } catch (error) {
+    return new Response(JSON.stringify({
+      error: error.message,
+      success: false,
+    }), {
+      status: 500,
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    });
   }
-})
+};
+
+// Set handler for serverless function
+Deno.serve(handler);
