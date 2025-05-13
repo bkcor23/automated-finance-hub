@@ -1,4 +1,13 @@
 
-import { useToast, toast } from "@/hooks/use-toast";
+import { toast } from "sonner";
 
-export { useToast, toast };
+// Re-export sonner toast
+export { toast };
+export const useToast = () => {
+  return {
+    toast,
+    // Add compatibility with the shadcn/ui toast interface
+    // so existing code doesn't break
+    toasts: []
+  };
+};

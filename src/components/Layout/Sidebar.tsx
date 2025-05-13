@@ -90,7 +90,7 @@ export default function Sidebar({
           <NavItem
             icon={<BarChart3 className="h-4 w-4" />}
             label="Dashboard"
-            to="/"
+            to="/dashboard"
             collapsed={collapsed}
           />
           <NavItem

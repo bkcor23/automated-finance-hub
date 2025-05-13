@@ -30,7 +30,8 @@ const router = createBrowserRouter(
         </AuthProvider>
       ),
       children: [
-        { index: true, element: <Dashboard /> },
+        { path: '', element: <Navigate to="/dashboard" replace /> },
+        { path: 'dashboard', element: <Dashboard /> },
         { path: 'transactions', element: <Transactions /> },
         { path: 'connections', element: <Connections /> },
         { path: 'automations', element: <Automations /> },
@@ -46,7 +47,7 @@ const router = createBrowserRouter(
           ],
         },
         // Redirigir rutas no encontradas al dashboard
-        { path: '*', element: <Navigate to="/" replace /> },
+        { path: '*', element: <Navigate to="/dashboard" replace /> },
       ],
     },
     {
@@ -63,7 +64,7 @@ const router = createBrowserRouter(
       ],
     },
     // Fallback para rutas fuera de la jerarquía principal
-    { path: '*', element: <Navigate to="/" replace /> },
+    { path: '*', element: <Navigate to="/dashboard" replace /> },
   ],
   {
     basename: import.meta.env.BASE_URL || '/',

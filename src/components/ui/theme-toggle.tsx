@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { useEffect, useState } from "react";
 import { useSettings } from "@/hooks/useSettings";
 import { UserSettings } from "@/types";
+import { toast } from "@/components/ui/use-toast";
 
 export function ThemeToggle() {
   const [mounted, setMounted] = useState(false);
@@ -27,6 +28,7 @@ export function ThemeToggle() {
   function toggleTheme() {
     const newTheme = currentTheme === 'light' ? 'dark' : 'light';
     updateSettings({ theme: newTheme } as Partial<UserSettings>);
+    toast(`Tema cambiado a ${newTheme === 'light' ? 'claro' : 'oscuro'}`);
   }
 
   return (

@@ -152,13 +152,13 @@ const Header = ({ toggleSidebar, isSidebarCollapsed }: HeaderProps) => {
             </DropdownMenuLabel>
             <DropdownMenuSeparator />
             <DropdownMenuItem asChild>
-              <Link to="/configuracion" className="flex items-center gap-2 cursor-pointer">
+              <Link to="/settings" className="flex items-center gap-2 cursor-pointer">
                 <Settings size={16} />
                 <span>Configuración</span>
               </Link>
             </DropdownMenuItem>
             <DropdownMenuItem asChild>
-              <Link to="/seguridad" className="flex items-center gap-2 cursor-pointer">
+              <Link to="/security" className="flex items-center gap-2 cursor-pointer">
                 <ShieldCheck size={16} />
                 <span>Seguridad</span>
               </Link>
